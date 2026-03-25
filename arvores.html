@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caderno de Campo — Árvores Frutíferas · Ifes Cachoeiro</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Special+Elite&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root {
+  --papel: #f2ead8;
+  --papel-escuro: #e8dcc4;
+  --papel-medio: #ede4ce;
+  --tinta: #2c1f0e;
+  --tinta-leve: #5a3e28;
+  --tinta-palida: #8b6e52;
+  --verde-tinta: #2d4a1e;
+  --verde-suave: #4a6e35;
+  --verde-claro: #7a9c5a;
+  --vermelho-baga: #8b2a1a;
+  --ocre: #b07830;
+  --linha: #c8b898;
+  --linha-escura: #a89878;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: #f0ece0;
+  font-family: 'Lora', serif;
+  color: var(--tinta);
+  min-height: 100vh;
+}
+
+.notebook {
+  max-width: 960px;
+  margin: 0 auto;
+  background: var(--papel);
+  box-shadow: -8px 0 20px rgba(0,0,0,0.3), 8px 0 20px rgba(0,0,0,0.2), 0 0 60px rgba(0,0,0,0.25);
+  position: relative;
+  min-height: 100vh;
+}
+
+
+.notebook::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 48px;
+  background: linear-gradient(90deg, #7a5c3a 0%, #9a7a52 40%, #8a6a42 100%);
+  box-shadow: inset -4px 0 8px rgba(0,0,0,0.25), 4px 0 8px rgba(0,0,0,0.15);
+  z-index: 10;
+}
+
+.holes {
+  position: fixed;
+  left: calc(50% - 480px);
+  top: 0;
+  width: 48px;
+  height: 100vh;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 60px;
+  gap: 80px;
+}
+
+.hole {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #c8b898;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 1px 2px rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+
+.content {
+  margin-left: 48px;
+  padding: 0;
+  position: relative;
+}
+
+.content::before { display: none; }
+.content::after  { display: none; }
+
+/* CAPA */
+.cover {
+  position: relative;
+  padding: 80px 60px 60px 80px;
+  min-height: 480px;
+  z-index: 2;
+  border-bottom: 2px solid var(--linha-escura);
+}
+
+.cover-stamp {
+  position: absolute;
+  top: 40px; right: 50px;
+  border: 3px solid var(--vermelho-baga);
+  color: var(--vermelho-baga);
+  font-family: 'Special Elite', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  transform: rotate(4deg);
+  opacity: 0.75;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.cover-alunos {
+  font-family: 'Caveat', cursive;
+  font-size: 1.05rem;
+  color: var(--tinta-leve);
+  height: 32px;
+  line-height: 32px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--linha);
+}
+
+.cover-number {
+  font-family: 'Special Elite', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  color: var(--tinta-palida);
+  margin-bottom: 24px;
+  text-transform: uppercase;
+}
+
+.cover h1 {
+  font-family: 'Caveat', cursive;
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  font-weight: 700;
+  color: var(--verde-tinta);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.cover h2 {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  color: var(--tinta-leve);
+  margin-bottom: 32px;
+}
+
+.cover-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.cover-divider .line { flex:1; height:1px; background:var(--linha-escura); }
+.cover-divider .icon { font-size:1.2rem; color:var(--verde-suave); }
+
+.cover-meta {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 32px;
+}
+.meta-item label {
+  display: block;
+  font-family: 'Special Elite', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--tinta-palida);
+  margin-bottom: 4px;
+}
+.meta-item span {
+  font-family: 'Caveat', cursive;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+.botanical-sketch {
+  position: absolute;
+  right: 50px; bottom: 40px;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* SEÇÃO */
+.section-label {
+  font-family: 'Special Elite', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--ocre);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: ''; flex:1; height:1px; background:var(--ocre); opacity:0.4;
+}
+
+/* TALLY */
+.index-section {
+  position: relative; z-index:2;
+  padding: 48px 60px 40px 80px;
+  border-bottom: 1px dashed var(--linha-escura);
+}
+
+.tally-grid { display:flex; flex-wrap:wrap; gap:20px; }
+
+.tally-item { display:flex; flex-direction:column; gap:6px; min-width:110px; }
+.tally-name { font-family:'Caveat',cursive; font-size:1.1rem; font-weight:600; color:var(--tinta-leve); }
+.tally-marks { display:flex; gap:3px; align-items:flex-end; }
+.tally-mark { width:3px; height:18px; background:var(--verde-tinta); border-radius:1px; }
+.tally-mark:nth-child(5n) { transform:rotate(-65deg) translateX(6px); background:var(--vermelho-baga); height:22px; }
+.tally-count { font-family:'Special Elite',monospace; font-size:0.7rem; color:var(--tinta-palida); }
+
+/* FICHAS */
+.entries-section {
+  position: relative; z-index:2;
+  padding: 48px 60px 48px 80px;
+}
+
+.tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:36px; }
+
+.tab {
+  font-family: 'Special Elite', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border: 1.5px solid var(--linha-escura);
+  background: var(--papel-medio);
+  color: var(--tinta-leve);
+  cursor: pointer;
+  border-radius: 2px 2px 0 0;
+  transition: all 0.15s;
+}
+.tab:hover { background: var(--papel-escuro); color: var(--tinta); }
+.tab.active { background: var(--verde-tinta); border-color: var(--verde-tinta); color: var(--papel); }
+
+.entries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.entry-card {
+  background: var(--papel-medio);
+  border: 1px solid var(--linha-escura);
+  border-top: 3px solid var(--verde-suave);
+  padding: 20px 18px 16px;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: default;
+}
+.entry-card::before {
+  content:'';
+  position:absolute; top:6px; left:6px; right:-6px; bottom:-6px;
+  background:rgba(44,31,14,0.06); z-index:-1;
+}
+.entry-card:hover { transform:translate(-2px,-2px); box-shadow:6px 6px 0 rgba(44,31,14,0.12); }
+.entry-card.hidden { display:none; }
+
+.entry-num {
+  position:absolute; top:12px; right:14px;
+  font-family:'Special Elite',monospace; font-size:0.62rem;
+  color:var(--tinta-palida); letter-spacing:0.1em;
+}
+.entry-icon { font-size:2.6rem; margin-bottom:10px; display:block; filter:saturate(0.8); }
+.entry-title { font-family:'Caveat',cursive; font-size:1.35rem; font-weight:700; color:var(--verde-tinta); line-height:1.2; margin-bottom:10px; }
+.entry-loc {
+  font-family:'Lora',serif; font-style:italic; font-size:0.82rem;
+  color:var(--tinta-leve); line-height:1.5;
+  padding-left:14px; border-left:2px solid var(--verde-claro); margin-bottom:10px;
+}
+.entry-coords {
+  font-family:'Special Elite',monospace; font-size:0.6rem;
+  color:var(--tinta-palida); letter-spacing:0.05em;
+  border-top:1px dashed var(--linha-escura); padding-top:8px; margin-top:4px;
+}
+
+/* MAPA */
+.map-section {
+  position:relative; z-index:2;
+  padding: 48px 60px 48px 80px;
+  border-top: 1px dashed var(--linha-escura);
+}
+.map-frame {
+  border:3px solid var(--tinta-leve);
+  box-shadow:6px 6px 0 rgba(44,31,14,0.15);
+  overflow:hidden; position:relative;
+}
+.map-caption {
+  font-family:'Special Elite',monospace; font-size:0.6rem;
+  letter-spacing:0.2em; text-transform:uppercase;
+  color:var(--tinta-leve); text-align:center;
+  padding: 7px 0;
+  background: var(--papel-escuro);
+  border-top: 1px solid var(--linha-escura);
+}
+#leaflet-map { width:100%; height:420px; display:block; filter:sepia(20%) saturate(85%); }
+.leaflet-emoji-icon { font-size:1.5rem; line-height:1; filter:drop-shadow(1px 1px 1px rgba(0,0,0,0.4)); }
+.leaflet-popup-content-wrapper {
+  background: var(--papel) !important;
+  border: 1.5px solid var(--linha-escura) !important;
+  border-radius: 4px !important;
+  box-shadow: 3px 3px 0 rgba(44,31,14,0.15) !important;
+  font-family: 'Lora', serif !important;
+}
+.leaflet-popup-content { margin: 10px 14px !important; }
+.leaflet-popup-content strong {
+  font-family: 'Caveat', cursive;
+  font-size: 1.1rem;
+  color: var(--verde-tinta);
+  display: block;
+  margin-bottom: 2px;
+}
+.leaflet-popup-content small {
+  font-family: 'Special Elite', monospace;
+  font-size: 0.6rem;
+  color: var(--tinta-palida);
+  letter-spacing: 0.05em;
+  display: block;
+  margin-top: 4px;
+}
+.leaflet-popup-content em {
+  font-size: 0.78rem;
+  color: var(--tinta-leve);
+  font-style: italic;
+}
+.leaflet-popup-tip-container { display:none; }
+.leaflet-popup-close-button { color: var(--tinta-palida) !important; }
+
+/* TABELA — alinhada à pauta de 32px */
+.list-section {
+  position:relative; z-index:2;
+  /* padding-top múltiplo de 32px para encaixar na pauta */
+  padding: 64px 60px 64px 80px;
+  border-top: 1px dashed var(--linha-escura);
+}
+.list-alunos {
+  font-family: 'Caveat', cursive;
+  font-size: 1.05rem;
+  color: var(--tinta-leve);
+  /* ocupa exatamente 1 linha de pauta = 32px */
+  height: 32px;
+  line-height: 32px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--linha);
+}
+.field-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+.field-table thead tr { }
+.field-table thead th {
+  font-family:'Special Elite',monospace; font-size:0.6rem;
+  letter-spacing:0.15em; text-transform:uppercase; color:var(--tinta-palida);
+  /* cabeçalho ocupa exatamente 1 linha = 32px */
+  height: 32px;
+  line-height: 32px;
+  padding: 0 12px 0 0;
+  text-align:left; font-weight:normal;
+  border-bottom: 2px solid var(--tinta-leve);
+  vertical-align: bottom;
+}
+.field-table tbody tr { transition:background 0.12s; }
+.field-table tbody tr:hover { background:rgba(122,156,90,0.08); }
+/* cada linha de dado = exatamente 32px, alinhada à pauta */
+.field-table td {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 12px 0 0;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* borda da célula coincide com a linha da pauta */
+  border-bottom: 1px solid var(--linha);
+}
+.td-num { font-family:'Special Elite',monospace; font-size:0.7rem; color:var(--tinta-palida); width:36px; }
+.td-especie { font-family:'Caveat',cursive; font-size:1.05rem; font-weight:600; color:var(--verde-tinta); }
+.td-local { font-style:italic; color:var(--tinta-leve); font-size:0.8rem; }
+.td-coord { font-family:'Special Elite',monospace; font-size:0.62rem; color:var(--tinta-palida); letter-spacing:0.03em; }
+
+/* PROMPTS */
+.prompts-section {
+  position: relative; z-index: 2;
+  padding: 48px 60px 48px 80px;
+  border-top: 1px dashed var(--linha-escura);
+}
+.prompts-list {
+  list-style: none;
+  counter-reset: prompt-counter;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.prompts-list li {
+  counter-increment: prompt-counter;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  /* cada item = exatamente 2 linhas de 32px */
+  min-height: 64px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--linha);
+  font-family: 'Lora', serif;
+  font-size: 0.85rem;
+  color: var(--tinta-leve);
+  line-height: 1.55;
+}
+.prompts-list li::before {
+  content: counter(prompt-counter, decimal-leading-zero);
+  font-family: 'Special Elite', monospace;
+  font-size: 0.65rem;
+  color: var(--ocre);
+  flex-shrink: 0;
+  width: 24px;
+  letter-spacing: 0.05em;
+}
+.prompts-list li em {
+  font-style: italic;
+  color: var(--tinta-palida);
+  font-size: 0.78rem;
+}
+
+/* RODAPÉ */
+.notebook-footer {
+  position:relative; z-index:2;
+  border-top:2px solid var(--linha-escura);
+  padding:24px 60px 32px 80px;
+  display:flex; justify-content:space-between; align-items:center;
+  background:var(--papel-escuro);
+}
+.footer-sig { font-family:'Caveat',cursive; font-size:1.1rem; color:var(--tinta-leve); }
+.footer-page { font-family:'Special Elite',monospace; font-size:0.65rem; letter-spacing:0.15em; color:var(--tinta-palida); }
+
+@media (max-width:640px) {
+  .holes { display:none; }
+  .notebook::before { width:32px; }
+  .content { margin-left:32px; }
+  .content::after, .content::before { left:40px; }
+  .cover, .index-section, .entries-section, .map-section, .list-section { padding-left:52px; padding-right:20px; }
+  .notebook-footer { padding-left:52px; padding-right:20px; }
+  .cover-meta { grid-template-columns:repeat(2,auto); }
+  .cover-stamp { right:16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="holes" id="holes"></div>
+
+<div class="notebook">
+  <div class="content">
+
+    <section class="cover">
+      <div class="cover-stamp">Inventário<br>Botânico<br>Campus Cachoeiro</div>
+      <div class="cover-alunos">Alunos: André, Guilherme, Laura e Luísa</div>
+      <div class="cover-alunos">LLM: Claude AI, vulgo Claudinho</div>
+      <div class="cover-number">Caderno Nº 001 — Campo</div>
+      <h1>Árvores<br>Frutíferas</h1>
+      <h2>Ifes Campus Cachoeiro de Itapemirim</h2>
+      <div class="cover-divider">
+        <div class="line"></div>
+        <span class="icon">🌿</span>
+        <div class="line"></div>
+      </div>
+      <div class="cover-meta">
+        <div class="meta-item"><label>Espécimes</label><span>30 árvores</span></div>
+        <div class="meta-item"><label>Espécies</label><span>15 tipos</span></div>
+        <div class="meta-item"><label>Local</label><span>ES, Brasil</span></div>
+      </div>
+      <div class="botanical-sketch">
+        <svg width="260" height="290" viewBox="0 0 260 290" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Caule principal: perfeitamente vertical, de y=270 até y=60 -->
+          <line x1="130" y1="270" x2="130" y2="60" stroke="#2c1f0e" stroke-width="2.5" stroke-linecap="round"/>
+
+          <!-- Ramo esquerdo inferior: sai de (130,170), vai para (60,130) -->
+          <line x1="130" y1="170" x2="60" y2="130" stroke="#2c1f0e" stroke-width="1.8" stroke-linecap="round"/>
+          <!-- Folha na ponta: elipse centrada em (60,130), alinhada ao ramo (ângulo ~-33°) -->
+          <ellipse cx="60" cy="130" rx="22" ry="10" transform="rotate(-33 60 130)" stroke="#2c1f0e" stroke-width="1.4" fill="none"/>
+          <!-- Nervura central da folha, ao longo do eixo maior -->
+          <line x1="39" y1="121" x2="81" y2="139" stroke="#2c1f0e" stroke-width="0.8" stroke-linecap="round"/>
+
+          <!-- Ramo direito inferior: sai de (130,170), vai para (200,130) — simétrico -->
+          <line x1="130" y1="170" x2="200" y2="130" stroke="#2c1f0e" stroke-width="1.8" stroke-linecap="round"/>
+          <!-- Folha na ponta: elipse centrada em (200,130), alinhada ao ramo (ângulo ~33°) -->
+          <ellipse cx="200" cy="130" rx="22" ry="10" transform="rotate(33 200 130)" stroke="#2c1f0e" stroke-width="1.4" fill="none"/>
+          <line x1="179" y1="139" x2="221" y2="121" stroke="#2c1f0e" stroke-width="0.8" stroke-linecap="round"/>
+
+          <!-- Ramo esquerdo superior: sai de (130,110), vai para (72,78) -->
+          <line x1="130" y1="110" x2="72" y2="78" stroke="#2c1f0e" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Folha na ponta: elipse centrada em (72,78), ângulo ~-30° -->
+          <ellipse cx="72" cy="78" rx="18" ry="9" transform="rotate(-30 72 78)" stroke="#2c1f0e" stroke-width="1.3" fill="none"/>
+          <line x1="56" y1="69" x2="88" y2="87" stroke="#2c1f0e" stroke-width="0.8" stroke-linecap="round"/>
+
+          <!-- Ramo direito superior: sai de (130,110), vai para (188,78) — simétrico -->
+          <line x1="130" y1="110" x2="188" y2="78" stroke="#2c1f0e" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Folha na ponta: elipse centrada em (188,78), ângulo ~30° -->
+          <ellipse cx="188" cy="78" rx="18" ry="9" transform="rotate(30 188 78)" stroke="#2c1f0e" stroke-width="1.3" fill="none"/>
+          <line x1="172" y1="87" x2="204" y2="69" stroke="#2c1f0e" stroke-width="0.8" stroke-linecap="round"/>
+
+          <!-- Folha do topo: centrada no topo do caule (130,60), vertical -->
+          <ellipse cx="130" cy="42" rx="10" ry="20" stroke="#2c1f0e" stroke-width="1.3" fill="none"/>
+          <line x1="130" y1="22" x2="130" y2="62" stroke="#2c1f0e" stroke-width="0.8" stroke-linecap="round"/>
+
+          <!-- Frutinhos: três círculos simétricos -->
+          <circle cx="100" cy="148" r="5" stroke="#2c1f0e" stroke-width="1.2" fill="none"/>
+          <circle cx="130" cy="140" r="5" stroke="#2c1f0e" stroke-width="1.2" fill="none"/>
+          <circle cx="160" cy="148" r="5" stroke="#2c1f0e" stroke-width="1.2" fill="none"/>
+
+          <!-- Raízes: simétricas em relação ao caule -->
+          <line x1="130" y1="270" x2="80"  y2="285" stroke="#2c1f0e" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="130" y1="270" x2="180" y2="285" stroke="#2c1f0e" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="130" y1="270" x2="100" y2="280" stroke="#2c1f0e" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="130" y1="270" x2="160" y2="280" stroke="#2c1f0e" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </section>
+
+    <section class="index-section">
+      <div class="section-label">Contagem por espécie</div>
+      <div class="tally-grid" id="tallyGrid"></div>
+    </section>
+
+    <section class="entries-section">
+      <div class="section-label">Fichas de campo</div>
+      <div class="tabs" id="tabsContainer"></div>
+      <div class="entries-grid" id="entriesGrid"></div>
+    </section>
+
+    <section class="map-section">
+      <div class="section-label">Localização do campus</div>
+      <div class="map-frame">
+        <div id="leaflet-map"></div>
+        <div class="map-caption">Campus Ifes — Cachoeiro de Itapemirim · clique nas marcações para detalhes</div>
+      </div>
+    </section>
+
+    <section class="list-section">
+      <div class="section-label">Registro completo</div>
+      <div class="list-alunos">Alunos: André, Guilherme, Laura e Luísa</div>
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Espécie</th><th>Localização</th><th>Coordenadas</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </section>
+
+    <section class="prompts-section">
+      <div class="section-label">Prompts utilizados</div>
+      <ol class="prompts-list">
+        <li>Elabore uma página html/css sobre árvores frutíferas do Ifes campus Cachoeiro. Utilize esses dados como base</li>
+        <li>Mude um pouco esse layout, ele ficou muito parecido com o exemplo do professor</li>
+        <li><em>[escolha]</em> Rústico / estilo caderno de campo · Mudar os cards para outro formato, Trocar as cores completamente</li>
+        <li>Dá uma ajeitadinha nos traços que estão tortos pelo bem do meu toc por favor</li>
+        <li>Tá ótimo, mas eu ficaria muito feliz se você fizesse marcações no mapa com os emojis de acordo com as coordenadas das árvores</li>
+        <li>Arrasou amigo. mas a parte de registro completo é uma tabela desalinhada com a pauta do caderno. gostaria que a tabela estivesse alinhada para evitar desconforto visual. coloque nosso nome no topo dessa forma: "Alunos: André, Guilherme, Laura e Luísa"</li>
+        <li>Os nomes devem estar no topo da página, querido</li>
+        <li>Amigo, tira a pauta do fundo por favor, mas dá uma textura de papel reciclado</li>
+        <li>Então, o fundo deve ser off white. Também escreva no topo da página "LLM: Claude AI, vulgo Claudinho" e no final da página, faça uma lista com os prompts que eu utilizei</li>
+      </ol>
+    </section>
+
+    <footer class="notebook-footer">
+      <span class="footer-sig">Ifes Campus Cachoeiro — Inventário Frutífero</span>
+      <span class="footer-page">Caderno de Campo · Vol. I</span>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+const trees = [
+  {id:1,  name:"Pé de Jambo",    loc:"Entre B5 e B7",        coords:"20°48'10.14\"S 41°09'19.10\"W"},
+  {id:2,  name:"Coqueiro",        loc:"Perto do Eu amo Ifes", coords:"20°48'09.77\"S 41°09'15.67\"W"},
+  {id:3,  name:"Pé de Jambo",    loc:"Entre B7 e B9",        coords:"20°48'09.17\"S 41°09'15.28\"W"},
+  {id:4,  name:"Pé de Jambo",    loc:"Lateral do B8",        coords:"20°48'09.21\"S 41°09'16.09\"W"},
+  {id:5,  name:"Pé de Mexerica", loc:"Atrás do refeitório",  coords:"20°48'13.06\"S 41°09'18.10\"W"},
+  {id:6,  name:"Pé de Goiaba",   loc:"Atrás do B9",          coords:"20°48'09.14\"S 41°09'14.27\"W"},
+  {id:7,  name:"Pé de Acerola",  loc:"Atrás da Biblioteca",  coords:"20°48'13.13\"S 41°09'17.17\"W"},
+  {id:8,  name:"Limoeira",        loc:"Atrás do B9",          coords:"20°48'09.36\"S 41°09'14.41\"W"},
+  {id:9,  name:"Pé de Mamão",    loc:"Na frente do Pátio",   coords:"20°48'10.72\"S 41°09'19.56\"W"},
+  {id:10, name:"Pé de Goiaba",   loc:"Atrás do B9",          coords:"20°48'09.50\"S 41°09'14.54\"W"},
+  {id:11, name:"Bananeira",       loc:"Atrás do B0",          coords:"20°48'13.13\"S 41°09'16.06\"W"},
+  {id:12, name:"Pé de Goiaba",   loc:"Atrás do B7",          coords:"20°48'09.75\"S 41°09'14.44\"W"},
+  {id:13, name:"Limoeira",        loc:"Atrás do B0",          coords:"20°48'12.96\"S 41°09'16.44\"W"},
+  {id:14, name:"Bananeira",       loc:"Atrás do B5",          coords:"20°48'10.17\"S 41°09'14.73\"W"},
+  {id:15, name:"Pé de Goiaba",   loc:"Atrás do B0",          coords:"20°48'12.05\"S 41°09'15.84\"W"},
+  {id:16, name:"Pé de Acerola",  loc:"Atrás do B5",          coords:"20°48'10.32\"S 41°09'14.93\"W"},
+  {id:17, name:"Pé de Maracujá", loc:"Atrás do B0",          coords:"20°48'13.31\"S 41°09'16.62\"W"},
+  {id:18, name:"Pé de Manga",    loc:"Atrás do B1",          coords:"20°48'11.43\"S 41°09'15.65\"W"},
+  {id:19, name:"Limoeira",        loc:"Atrás do B1",          coords:"20°48'11.65\"S 41°09'15.71\"W"},
+  {id:20, name:"Bananeira",       loc:"Atrás da Quadra",      coords:"20°48'06.98\"S 41°09'17.01\"W"},
+  {id:21, name:"Açaí",            loc:"Perto da placa solar", coords:"20°48'08.16\"S 41°09'16.36\"W"},
+  {id:23, name:"Açaí",            loc:"Na frente do B4",      coords:"20°48'09.33\"S 41°09'17.11\"W"},
+  {id:24, name:"Açaí",            loc:"Na frente do B6",      coords:"20°48'09.94\"S 41°09'17.53\"W"},
+  {id:25, name:"Açaí",            loc:"Na frente do B8",      coords:"20°48'08.78\"S 41°09'16.83\"W"},
+  {id:26, name:"Açaí",            loc:"Na frente do B10",     coords:"20°48'08.41\"S 41°09'16.51\"W"},
+  {id:27, name:"Pé de Amora",    loc:"Atrás do B0",          coords:"20°48'13.12\"S 41°09'15.49\"W"},
+  {id:28, name:"Limoeira",        loc:"Atrás do B0",          coords:"20°48'12.87\"S 41°09'15.42\"W"},
+  {id:29, name:"Figueira",        loc:"Atrás do B0",          coords:"20°48'13.05\"S 41°09'15.35\"W"},
+  {id:30, name:"Pitaya",          loc:"Atrás do B0",          coords:"20°48'12.18\"S 41°09'14.66\"W"},
+  {id:31, name:"Coqueiro",        loc:"Estacionamento",       coords:"20°48'09.74\"S 41°09'18.61\"W"},
+];
+
+const emojiMap = {
+  jambo:"🌺",coqueiro:"🥥",mexerica:"🍊",goiaba:"🍈",acerola:"🍒",
+  limoeira:"🍋",mamão:"🖐️",bananeira:"🍌",açaí:"🌴",amora:"🫐",
+  maracujá:"🟡",manga:"🥭",figueira:"🍐",pitaya:"🐉",
+};
+function emoji(name){
+  const n=name.toLowerCase();
+  for(const[k,v]of Object.entries(emojiMap))if(n.includes(k))return v;
+  return "🌿";
+}
+function fkey(name){
+  const n=name.toLowerCase();
+  if(n.includes("açaí"))return"açaí";
+  if(n.includes("limoeira"))return"limoeira";
+  if(n.includes("goiaba"))return"goiaba";
+  if(n.includes("bananeira"))return"bananeira";
+  if(n.includes("jambo"))return"jambo";
+  if(n.includes("coqueiro"))return"coqueiro";
+  if(n.includes("acerola"))return"acerola";
+  if(n.includes("manga"))return"manga";
+  return"outros";
+}
+
+// Perfurações
+const holesEl=document.getElementById("holes");
+for(let i=0;i<12;i++){const h=document.createElement("div");h.className="hole";holesEl.appendChild(h);}
+
+// Tally
+const counts={};
+trees.forEach(t=>{const k=fkey(t.name);counts[k]=(counts[k]||0)+1;});
+const labels={açaí:"Açaizeiro",limoeira:"Limoeira",goiaba:"Goiabeira",bananeira:"Bananeira",
+  jambo:"Jambeiro",coqueiro:"Coqueiro",acerola:"Aceroleira",manga:"Mangueira",outros:"Outras"};
+const tg=document.getElementById("tallyGrid");
+Object.entries(counts).forEach(([k,c])=>{
+  const el=document.createElement("div");el.className="tally-item";
+  let marks="";for(let i=1;i<=c;i++)marks+=`<div class="tally-mark"></div>`;
+  el.innerHTML=`<div class="tally-name">${labels[k]||k}</div><div class="tally-marks">${marks}</div><div class="tally-count">${c} espécime${c>1?"s":""}</div>`;
+  tg.appendChild(el);
+});
+
+// Tabs
+const keys=["all","açaí","limoeira","goiaba","bananeira","jambo","coqueiro","acerola","manga","outros"];
+const tabLbls={all:"Todas",açaí:"Açaí",limoeira:"Limoeira",goiaba:"Goiaba",bananeira:"Bananeira",
+  jambo:"Jambo",coqueiro:"Coqueiro",acerola:"Acerola",manga:"Manga",outros:"Outras"};
+const tc=document.getElementById("tabsContainer");
+keys.forEach(k=>{
+  const b=document.createElement("button");
+  b.className="tab"+(k==="all"?" active":"");b.dataset.filter=k;b.textContent=tabLbls[k];
+  b.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+    document.querySelectorAll(".entry-card").forEach(c=>c.classList.toggle("hidden",k!=="all"&&c.dataset.filter!==k));
+  });
+  tc.appendChild(b);
+});
+
+// Cards
+const grid=document.getElementById("entriesGrid");
+trees.forEach(t=>{
+  const card=document.createElement("div");card.className="entry-card";card.dataset.filter=fkey(t.name);
+  card.innerHTML=`<div class="entry-num">Nº ${String(t.id).padStart(2,"0")}</div>
+    <span class="entry-icon">${emoji(t.name)}</span>
+    <div class="entry-title">${t.name}</div>
+    <div class="entry-loc">${t.loc}</div>
+    <div class="entry-coords">${t.coords}</div>`;
+  grid.appendChild(card);
+});
+
+
+// Tabela
+const tbody=document.getElementById("tableBody");
+trees.forEach(t=>{
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td class="td-num">${t.id}</td><td class="td-especie">${emoji(t.name)} ${t.name}</td><td class="td-local">${t.loc}</td><td class="td-coord">${t.coords}</td>`;
+  tbody.appendChild(tr);
+});
+
+function parseDMS(str) {
+  // Exemplo: 20°48'10.14"S 41°09'19.10"W
+  const m = str.match(/([\d]+)°([\d]+)'([\d.]+)"([NS])\s+([\d]+)°([\d]+)'([\d.]+)"([EW])/);
+  if (!m) return null;
+  let lat = +m[1] + +m[2]/60 + +m[3]/3600;
+  let lng = +m[5] + +m[6]/60 + +m[7]/3600;
+  if (m[4]==='S') lat = -lat;
+  if (m[8]==='W') lng = -lng;
+  return [lat, lng];
+}
+
+const map = L.map('leaflet-map', { zoomControl: true, scrollWheelZoom: false });
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap',
+  maxZoom: 19,
+}).addTo(map);
+
+const markers = [];
+trees.forEach(t => {
+  const coords = parseDMS(t.coords);
+  if (!coords) return;
+  const icon = L.divIcon({
+    html: `<div class="leaflet-emoji-icon">${emoji(t.name)}</div>`,
+    className: '',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -16],
+  });
+  const marker = L.marker(coords, { icon }).addTo(map);
+  marker.bindPopup(`
+    <strong>${emoji(t.name)} ${t.name}</strong>
+    <em>${t.loc}</em>
+    <small>${t.coords}</small>
+  `);
+  markers.push(marker);
+});
+
+// Centraliza o mapa em todos os marcadores
+if (markers.length > 0) {
+  const group = L.featureGroup(markers);
+  map.fitBounds(group.getBounds().pad(0.15));
+}
+</script>
+</body>
+</html>
